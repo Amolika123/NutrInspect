@@ -1,3 +1,10 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-background",
+      "description": "A vibrant and healthy salad in a bowl.",
+      "imageUrl": "https://picsum.photos/seed/healthymeal/1200/800",
+      "imageHint": "healthy food"
+    }
+  ]
 }
