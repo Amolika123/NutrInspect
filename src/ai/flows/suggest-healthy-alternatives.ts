@@ -22,11 +22,13 @@ export type SuggestHealthyAlternativesInput = z.infer<typeof SuggestHealthyAlter
 const CookedAlternativeSchema = z.object({
   name: z.string().describe('The name of the cooked alternative food.'),
   recipe: z.string().describe('The recipe for how to prepare the cooked alternative.'),
+  imageUrl: z.string().url().describe('A placeholder image URL for the food from picsum.photos.'),
 });
 
 const PackagedAlternativeSchema = z.object({
   name: z.string().describe('The name of the packaged alternative food.'),
   price: z.string().describe('The estimated price of the packaged alternative in rupees (₹).'),
+  imageUrl: z.string().url().describe('A placeholder image URL for the food from picsum.photos.'),
 });
 
 const SuggestHealthyAlternativesOutputSchema = z.object({
@@ -55,6 +57,8 @@ const prompt = ai.definePrompt({
   input: {schema: SuggestHealthyAlternativesInputSchema},
   output: {schema: SuggestHealthyAlternativesOutputSchema},
   prompt: `For the given food, "{{identifiedFood}}", suggest 2 healthy cooked alternatives and 2 healthy packaged alternatives.
+
+For each alternative, provide a placeholder image URL from https://picsum.photos. The URL should be in the format 'https://picsum.photos/seed/{a-unique-seed}/400/300'.
 
 For the cooked alternatives, provide a simple recipe for each.
 For the packaged alternatives, provide an estimated price in Indian Rupees (₹).

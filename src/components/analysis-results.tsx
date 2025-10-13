@@ -95,7 +95,12 @@ export function AnalysisResults({ result, imageUrl }: AnalysisResultsProps) {
                  <Accordion type="single" collapsible className="w-full">
                   {alternatives.cookedAlternatives.map((alt, index) => (
                     <AccordionItem value={`item-${index}`} key={index}>
-                      <AccordionTrigger>{alt.name}</AccordionTrigger>
+                      <AccordionTrigger>
+                        <div className="flex items-center gap-4">
+                           <Image src={alt.imageUrl} alt={alt.name} width={40} height={40} className="rounded-md object-cover" />
+                           <span>{alt.name}</span>
+                        </div>
+                      </AccordionTrigger>
                       <AccordionContent>
                         <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
                           {alt.recipe}
@@ -110,11 +115,14 @@ export function AnalysisResults({ result, imageUrl }: AnalysisResultsProps) {
                 <div className="space-y-4">
                   {alternatives.packagedAlternatives.map((alt, index) => (
                      <Card key={index} className="bg-background/50">
-                      <CardContent className="p-4 flex justify-between items-center">
-                        <p className="font-medium">{alt.name}</p>
-                        <div className="flex items-center gap-1 font-semibold text-primary">
-                          <IndianRupee className="h-4 w-4" />
-                          <span>{alt.price}</span>
+                      <CardContent className="p-4 flex items-center gap-4">
+                         <Image src={alt.imageUrl} alt={alt.name} width={60} height={60} className="rounded-md object-cover" />
+                        <div className='flex-1 flex justify-between items-center'>
+                          <p className="font-medium">{alt.name}</p>
+                          <div className="flex items-center gap-1 font-semibold text-primary">
+                            <IndianRupee className="h-4 w-4" />
+                            <span>{alt.price}</span>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
