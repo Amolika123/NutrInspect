@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -10,6 +11,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import { getFoodImage } from '@/lib/unsplash';
 import {z} from 'genkit';
 
 const SuggestHealthyAlternativesInputSchema = z.object({
@@ -91,43 +93,19 @@ const suggestHealthyAlternativesFlow = ai.defineFlow(
     if (!output) {
       throw new Error('Could not generate alternatives.');
     }
-
-    // Function to generate an image and return its URL (as a data URI)
-    const generateImageUrl = async (promptText: string) => {
-      try {
-        const {media} = await ai.generate({
-          model: 'googleai/imagen-4.0-fast-generate-001',
-          prompt: `A clear, high-quality, appetizing photo of ${promptText} on a clean background.`,
-          config: {
-            safetySettings: [
-              {
-                category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-                threshold: 'BLOCK_NONE',
-              },
-            ],
-          },
-        });
-        return media.url;
-      } catch (e) {
-        console.error(`Failed to generate image for "${promptText}":`, e);
-        // Fallback to a placeholder if generation fails
-        const seed = promptText.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        return `https://picsum.photos/seed/${seed}/400/400`;
-      }
-    };
     
-    // Generate images for all alternatives in parallel
+    // Fetch images from Unsplash for all alternatives in parallel
     const cookedWithImages = await Promise.all(
       output.cookedAlternatives.map(async alt => ({
         ...alt,
-        imageUrl: await generateImageUrl(alt.name),
+        imageUrl: await getFoodImage(alt.name),
       }))
     );
 
     const packagedWithImages = await Promise.all(
       output.packagedAlternatives.map(async alt => ({
         ...alt,
-        imageUrl: await generateImageUrl(alt.name),
+        imageUrl: await getFoodImage(alt.name),
       }))
     );
     
