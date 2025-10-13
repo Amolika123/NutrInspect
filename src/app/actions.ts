@@ -6,26 +6,26 @@ import { suggestHealthyAlternatives } from '@/ai/flows/suggest-healthy-alternati
 import type { FullAnalysisResult, ParsedNutrition } from '@/lib/types';
 
 function parseNutrition(content: string): ParsedNutrition {
-  // Function to extract a value, handling ranges by averaging them.
-  const extractValue = (regex: RegExp, text: string): number => {
+  // More robust parsing function to handle "Key: Value" formats and conversational text.
+  const extractValue = (key: string, text: string): number => {
+    // Regex to find "Key: number" or "Key number" or "number g Key"
+    const regex = new RegExp(
+      `(?:${key}\\s*:?\\s*(\\d*\\.?\\d+))|(?:(\\d*\\.?\\d+)\\s*g(?:\\s+of)?\\s+${key})`,
+      'i'
+    );
     const match = text.match(regex);
     if (match) {
-      if (match[1] && match[2]) {
-        // It's a range (e.g., "150-160"), so average it.
-        return (parseFloat(match[1]) + parseFloat(match[2])) / 2;
-      } else if (match[1]) {
-        // It's a single number.
-        return parseFloat(match[1]);
-      }
+      // Return the first captured group that is a number
+      return parseFloat(match[1] || match[2]);
     }
     return 0;
   };
 
-  const calories = extractValue(/(\d[\d.]*)-?(\d[\d.]*)?\s*calories/i, content);
-  const protein = extractValue(/(\d[\d.]*)-?(\d[\d.]*)?\s*g\s*protein/i, content);
-  const carbohydrates = extractValue(/(\d[\d.]*)-?(\d[\d.]*)?\s*g\s*carbohydrates/i, content);
-  const sugar = extractValue(/(\d[\d.]*)-?(\d[\d.]*)?\s*g\s*sugar/i, content);
-  const fat = extractValue(/(\d[\d.]*)-?(\d[\d.]*)?\s*g\s*fat/i, content);
+  const calories = extractValue('calories', content) || extractValue('kcal', content);
+  const protein = extractValue('protein', content);
+  const carbohydrates = extractValue('carbohydrates', content);
+  const sugar = extractValue('sugar', content);
+  const fat = extractValue('fat', content);
 
   const nutrition: ParsedNutrition = {
     calories,
