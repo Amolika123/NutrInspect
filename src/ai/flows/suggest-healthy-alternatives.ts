@@ -92,27 +92,21 @@ const suggestHealthyAlternativesFlow = ai.defineFlow(
       throw new Error('Could not generate alternatives.');
     }
 
-    const generateImage = async (name: string) => {
-      const {media} = await ai.generate({
-        model: 'googleai/imagen-4.0-fast-generate-001',
-        prompt: `A clear, appetizing photo of ${name}, presented on a clean, simple background.`,
-      });
-      return media.url;
+    const getPlaceholderImage = (name: string) => {
+      // Simple hashing function to get a somewhat unique seed from the name
+      const seed = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      return `https://picsum.photos/seed/${seed}/400/400`;
     };
 
-    const cookedWithImages = await Promise.all(
-      output.cookedAlternatives.map(async alt => ({
+    const cookedWithImages = output.cookedAlternatives.map(alt => ({
         ...alt,
-        imageUrl: await generateImage(alt.name),
-      }))
-    );
+        imageUrl: getPlaceholderImage(alt.name),
+      }));
 
-    const packagedWithImages = await Promise.all(
-      output.packagedAlternatives.map(async alt => ({
+    const packagedWithImages = output.packagedAlternatives.map(alt => ({
         ...alt,
-        imageUrl: await generateImage(alt.name),
-      }))
-    );
+        imageUrl: getPlaceholderImage(alt.name),
+      }));
 
     return {
       cookedAlternatives: cookedWithImages,
