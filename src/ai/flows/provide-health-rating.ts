@@ -39,7 +39,7 @@ const prompt = ai.definePrompt({
   output: {schema: ProvideHealthRatingOutputSchema},
   prompt: `You are a nutritionist providing a health rating for food.
 
-  Based on the following nutritional information, provide a health score between 1 and 10 (inclusive), where 1 is very unhealthy and 10 is very healthy. Also, explain your rating.
+  Based on the following nutritional information, provide a health score between 1 and 10 (inclusive), where 1 is very unhealthy and 10 is very healthy. Also, provide a brief explanation for your rating.
 
   Food: {{{foodName}}}
   Calories: {{{calories}}} kcal
@@ -47,12 +47,7 @@ const prompt = ai.definePrompt({
   Carbohydrates: {{{carbohydrates}}} g
   Sugar: {{{sugar}}} g
   Fat: {{{fat}}} g
-
-  Provide the rating and explanation in the following format:
-  {
-    "healthScore": <number>,
-    "explanation": <string>
-  }`,
+`,
 });
 
 const provideHealthRatingFlow = ai.defineFlow(

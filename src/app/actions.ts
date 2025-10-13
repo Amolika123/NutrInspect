@@ -7,15 +7,22 @@ import type { FullAnalysisResult, ParsedNutrition } from '@/lib/types';
 
 function parseNutrition(content: string): ParsedNutrition {
   const parseNutrient = (nutrient: string): number => {
-    const regex = new RegExp(`${nutrient}:\\s*(\\d+\\.?\\d*)\\s*g?`, 'i');
+    // Look for "nutrient: Xg" or "nutrient: X g"
+    const regex = new RegExp(`${nutrient}:\\s*([\\d.]+)\\s*g?`, 'i');
     const match = content.match(regex);
-    return match ? parseFloat(match[1]) : 0;
+    if (match) {
+        return parseFloat(match[1]);
+    }
+    return 0;
   };
   
   const parseCalories = (): number => {
-    const regex = new RegExp(`calories:\\s*(\\d+\\.?\\d*)`, 'i');
+    const regex = new RegExp(`calories:\\s*([\\d.]+)`, 'i');
     const match = content.match(regex);
-    return match ? parseFloat(match[1]) : 0;
+    if (match) {
+        return parseFloat(match[1]);
+    }
+    return 0;
   };
 
   const nutrition: ParsedNutrition = {
@@ -26,8 +33,10 @@ function parseNutrition(content: string): ParsedNutrition {
     fat: parseNutrient('fat'),
   };
 
+  // Only throw an error if we couldn't parse ANYTHING.
+  // Sometimes the model might not return 'sugar'.
   if (Object.values(nutrition).every(val => val === 0)) {
-    throw new Error("Could not parse nutritional information from the analysis. The format might be unexpected.");
+    throw new Error("Could not parse nutritional information from the analysis. The format might be unexpected. The response was: " + content);
   }
 
   return nutrition;
