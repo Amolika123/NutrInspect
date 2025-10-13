@@ -39,11 +39,11 @@ const SuggestHealthyAlternativesOutputSchema = z.object({
 });
 
 const CookedAlternativeSchema = CookedAlternativeOutputSchema.extend({
-  imageUrl: z.string(),
+  imageUrl: z.string().describe('URL of an image of the food.'),
 });
 
 const PackagedAlternativeSchema = PackagedAlternativeOutputSchema.extend({
-  imageUrl: z.string(),
+  imageUrl: z.string().describe('URL of an image of the food.'),
 });
 
 export type SuggestHealthyAlternativesOutput = {
@@ -92,22 +92,45 @@ const suggestHealthyAlternativesFlow = ai.defineFlow(
       throw new Error('Could not generate alternatives.');
     }
 
-    const getPlaceholderImage = (name: string) => {
-      // Simple hashing function to get a somewhat unique seed from the name
-      const seed = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      return `https://picsum.photos/seed/${seed}/400/400`;
+    // Function to generate an image and return its URL (as a data URI)
+    const generateImageUrl = async (promptText: string) => {
+      try {
+        const {media} = await ai.generate({
+          model: 'googleai/imagen-4.0-fast-generate-001',
+          prompt: `A clear, high-quality, appetizing photo of ${promptText} on a clean background.`,
+          config: {
+            safetySettings: [
+              {
+                category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                threshold: 'BLOCK_NONE',
+              },
+            ],
+          },
+        });
+        return media.url;
+      } catch (e) {
+        console.error(`Failed to generate image for "${promptText}":`, e);
+        // Fallback to a placeholder if generation fails
+        const seed = promptText.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        return `https://picsum.photos/seed/${seed}/400/400`;
+      }
     };
-
-    const cookedWithImages = output.cookedAlternatives.map(alt => ({
+    
+    // Generate images for all alternatives in parallel
+    const cookedWithImages = await Promise.all(
+      output.cookedAlternatives.map(async alt => ({
         ...alt,
-        imageUrl: getPlaceholderImage(alt.name),
-      }));
+        imageUrl: await generateImageUrl(alt.name),
+      }))
+    );
 
-    const packagedWithImages = output.packagedAlternatives.map(alt => ({
+    const packagedWithImages = await Promise.all(
+      output.packagedAlternatives.map(async alt => ({
         ...alt,
-        imageUrl: getPlaceholderImage(alt.name),
-      }));
-
+        imageUrl: await generateImageUrl(alt.name),
+      }))
+    );
+    
     return {
       cookedAlternatives: cookedWithImages,
       packagedAlternatives: packagedWithImages,
