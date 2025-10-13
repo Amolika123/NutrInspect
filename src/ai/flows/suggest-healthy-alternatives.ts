@@ -19,35 +19,38 @@ const SuggestHealthyAlternativesInputSchema = z.object({
 });
 export type SuggestHealthyAlternativesInput = z.infer<typeof SuggestHealthyAlternativesInputSchema>;
 
-const CookedAlternativeSchema = z.object({
+const CookedAlternativeOutputSchema = z.object({
   name: z.string().describe('The name of the cooked alternative food.'),
   recipe: z.string().describe('The recipe for how to prepare the cooked alternative.'),
-  imageUrl: z
-    .string()
-    .describe(
-      "A generated image of the food, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-    ),
 });
 
-const PackagedAlternativeSchema = z.object({
+const PackagedAlternativeOutputSchema = z.object({
   name: z.string().describe('The name of the packaged alternative food.'),
   price: z.string().describe('The estimated price of the packaged alternative in rupees (₹).'),
-  imageUrl: z
-    .string()
-    .describe(
-      "A generated image of the food, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-    ),
 });
 
 const SuggestHealthyAlternativesOutputSchema = z.object({
   cookedAlternatives: z
-    .array(CookedAlternativeSchema)
+    .array(CookedAlternativeOutputSchema)
     .describe('An array of suggestions for healthy cooked alternative foods with recipes.'),
   packagedAlternatives: z
-    .array(PackagedAlternativeSchema)
+    .array(PackagedAlternativeOutputSchema)
     .describe('An array of suggestions for healthy packaged alternative foods with prices in rupees.'),
 });
-export type SuggestHealthyAlternativesOutput = z.infer<typeof SuggestHealthyAlternativesOutputSchema>;
+
+const CookedAlternativeSchema = CookedAlternativeOutputSchema.extend({
+  imageUrl: z.string(),
+});
+
+const PackagedAlternativeSchema = PackagedAlternativeOutputSchema.extend({
+  imageUrl: z.string(),
+});
+
+export type SuggestHealthyAlternativesOutput = {
+  cookedAlternatives: z.infer<typeof CookedAlternativeSchema>[];
+  packagedAlternatives: z.infer<typeof PackagedAlternativeSchema>[];
+};
+
 
 /**
  * Suggests cheap, healthy, and safer alternative foods based on the identified food.
@@ -66,8 +69,6 @@ const prompt = ai.definePrompt({
   output: {schema: SuggestHealthyAlternativesOutputSchema},
   prompt: `For the given food, "{{identifiedFood}}", suggest 2 healthy cooked alternatives and 2 healthy packaged alternatives.
 
-For each alternative, generate a relevant image of the food.
-
 For the cooked alternatives, provide a simple recipe for each.
 For the packaged alternatives, provide an estimated price in Indian Rupees (₹).
 
@@ -79,9 +80,12 @@ const suggestHealthyAlternativesFlow = ai.defineFlow(
   {
     name: 'suggestHealthyAlternativesFlow',
     inputSchema: SuggestHealthyAlternativesInputSchema,
-    outputSchema: SuggestHealthyAlternativesOutputSchema,
+    outputSchema: z.object({
+      cookedAlternatives: z.array(CookedAlternativeSchema),
+      packagedAlternatives: z.array(PackagedAlternativeSchema),
+    }),
   },
-  async input => {
+  async (input): Promise<SuggestHealthyAlternativesOutput> => {
     const {output} = await prompt(input);
 
     if (!output) {
