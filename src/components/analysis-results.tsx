@@ -4,8 +4,8 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { FullAnalysisResult } from '@/lib/types';
 import { HealthScoreChart } from './health-score-chart';
-import { Lightbulb, Leaf, Zap, BarChart, ChefHat } from 'lucide-react';
-import { Badge } from './ui/badge';
+import { Lightbulb, Leaf, Zap, BarChart, ChefHat, BookOpen, Package, IndianRupee } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 interface AnalysisResultsProps {
   result: FullAnalysisResult;
@@ -89,13 +89,39 @@ export function AnalysisResults({ result, imageUrl }: AnalysisResultsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-3">
-            {alternatives.alternatives.map((alt, index) => (
-              <Badge key={index} variant="secondary" className="text-lg px-4 py-2 rounded-full border-primary/20 border">
-                {alt.replace(/^\d+\.\s*/, '')}
-              </Badge>
-            ))}
-          </div>
+           <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="font-semibold text-lg flex items-center gap-2 mb-4"><BookOpen className="h-5 w-5 text-primary" />Cooked Options</h3>
+                 <Accordion type="single" collapsible className="w-full">
+                  {alternatives.cookedAlternatives.map((alt, index) => (
+                    <AccordionItem value={`item-${index}`} key={index}>
+                      <AccordionTrigger>{alt.name}</AccordionTrigger>
+                      <AccordionContent>
+                        <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                          {alt.recipe}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
+               <div>
+                <h3 className="font-semibold text-lg flex items-center gap-2 mb-4"><Package className="h-5 w-5 text-primary" />Packaged Options</h3>
+                <div className="space-y-4">
+                  {alternatives.packagedAlternatives.map((alt, index) => (
+                     <Card key={index} className="bg-background/50">
+                      <CardContent className="p-4 flex justify-between items-center">
+                        <p className="font-medium">{alt.name}</p>
+                        <div className="flex items-center gap-1 font-semibold text-primary">
+                          <IndianRupee className="h-4 w-4" />
+                          <span>{alt.price}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+           </div>
         </CardContent>
       </Card>
     </div>

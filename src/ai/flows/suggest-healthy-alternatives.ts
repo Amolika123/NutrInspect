@@ -3,7 +3,8 @@
 /**
  * @fileOverview This file defines a Genkit flow for suggesting cheap, healthy, and safer alternative foods.
  *
- * The flow takes an identified food as input and returns suggestions for alternative foods.
+ * The flow takes an identified food as input and returns suggestions for alternative foods,
+ * including cooked options with recipes and packaged options with prices.
  * It exports the SuggestHealthyAlternativesInput and SuggestHealthyAlternativesOutput types, as well as
  * the suggestHealthyAlternatives function to trigger the flow.
  */
@@ -18,10 +19,23 @@ const SuggestHealthyAlternativesInputSchema = z.object({
 });
 export type SuggestHealthyAlternativesInput = z.infer<typeof SuggestHealthyAlternativesInputSchema>;
 
+const CookedAlternativeSchema = z.object({
+  name: z.string().describe('The name of the cooked alternative food.'),
+  recipe: z.string().describe('The recipe for how to prepare the cooked alternative.'),
+});
+
+const PackagedAlternativeSchema = z.object({
+  name: z.string().describe('The name of the packaged alternative food.'),
+  price: z.string().describe('The estimated price of the packaged alternative in rupees (₹).'),
+});
+
 const SuggestHealthyAlternativesOutputSchema = z.object({
-  alternatives: z
-    .array(z.string())
-    .describe('An array of suggestions for cheap, healthy, and safer alternative foods.'),
+  cookedAlternatives: z
+    .array(CookedAlternativeSchema)
+    .describe('An array of suggestions for healthy cooked alternative foods with recipes.'),
+  packagedAlternatives: z
+    .array(PackagedAlternativeSchema)
+    .describe('An array of suggestions for healthy packaged alternative foods with prices in rupees.'),
 });
 export type SuggestHealthyAlternativesOutput = z.infer<typeof SuggestHealthyAlternativesOutputSchema>;
 
@@ -40,7 +54,12 @@ const prompt = ai.definePrompt({
   name: 'suggestHealthyAlternativesPrompt',
   input: {schema: SuggestHealthyAlternativesInputSchema},
   output: {schema: SuggestHealthyAlternativesOutputSchema},
-  prompt: `Suggest 3 cheap, healthy, and safer alternative foods for {{identifiedFood}}.\n\nOutput the alternatives as a numbered list.
+  prompt: `For the given food, "{{identifiedFood}}", suggest 2 healthy cooked alternatives and 2 healthy packaged alternatives.
+
+For the cooked alternatives, provide a simple recipe for each.
+For the packaged alternatives, provide an estimated price in Indian Rupees (₹).
+
+Ensure you return a JSON object with 'cookedAlternatives' and 'packagedAlternatives' arrays.
 `,
 });
 
