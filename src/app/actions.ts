@@ -6,41 +6,43 @@ import { suggestHealthyAlternatives } from '@/ai/flows/suggest-healthy-alternati
 import type { FullAnalysisResult, ParsedNutrition } from '@/lib/types';
 
 function parseNutrition(content: string): ParsedNutrition {
-  const parseNutrient = (nutrient: string): number => {
-    // Look for "nutrient: Xg" or "nutrient: X g"
-    const regex = new RegExp(`${nutrient}:\\s*([\\d.]+)\\s*g?`, 'i');
-    const match = content.match(regex);
+  // Function to extract a value, handling ranges by averaging them.
+  const extractValue = (regex: RegExp, text: string): number => {
+    const match = text.match(regex);
     if (match) {
+      if (match[1] && match[2]) {
+        // It's a range (e.g., "150-160"), so average it.
+        return (parseFloat(match[1]) + parseFloat(match[2])) / 2;
+      } else if (match[1]) {
+        // It's a single number.
         return parseFloat(match[1]);
-    }
-    return 0;
-  };
-  
-  const parseCalories = (): number => {
-    const regex = new RegExp(`calories:\\s*([\\d.]+)`, 'i');
-    const match = content.match(regex);
-    if (match) {
-        return parseFloat(match[1]);
+      }
     }
     return 0;
   };
 
+  const calories = extractValue(/(\d[\d.]*)-?(\d[\d.]*)?\s*calories/i, content);
+  const protein = extractValue(/(\d[\d.]*)-?(\d[\d.]*)?\s*g\s*protein/i, content);
+  const carbohydrates = extractValue(/(\d[\d.]*)-?(\d[\d.]*)?\s*g\s*carbohydrates/i, content);
+  const sugar = extractValue(/(\d[\d.]*)-?(\d[\d.]*)?\s*g\s*sugar/i, content);
+  const fat = extractValue(/(\d[\d.]*)-?(\d[\d.]*)?\s*g\s*fat/i, content);
+
   const nutrition: ParsedNutrition = {
-    calories: parseCalories(),
-    protein: parseNutrient('protein'),
-    carbohydrates: parseNutrient('carbohydrates'),
-    sugar: parseNutrient('sugar'),
-    fat: parseNutrient('fat'),
+    calories,
+    protein,
+    carbohydrates,
+    sugar,
+    fat,
   };
 
   // Only throw an error if we couldn't parse ANYTHING.
-  // Sometimes the model might not return 'sugar'.
   if (Object.values(nutrition).every(val => val === 0)) {
     throw new Error("Could not parse nutritional information from the analysis. The format might be unexpected. The response was: " + content);
   }
 
   return nutrition;
 }
+
 
 export async function performAnalysis(
   photoDataUri: string
