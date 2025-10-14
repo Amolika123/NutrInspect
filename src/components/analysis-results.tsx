@@ -31,6 +31,8 @@ export function AnalysisResults({ result, imageUrl }: AnalysisResultsProps) {
     { name: 'Fat', value: parsedNutrition.fat, unit: 'g', icon: nutrientIcons.fat },
   ];
 
+  const hasAlternatives = alternatives.cookedAlternatives.length > 0 || alternatives.packagedAlternatives.length > 0;
+
   return (
     <div className="space-y-8">
       <div className="grid md:grid-cols-3 gap-8 items-start">
@@ -71,7 +73,7 @@ export function AnalysisResults({ result, imageUrl }: AnalysisResultsProps) {
                   <Card key={nutrient.name} className="bg-background/50 text-center p-4">
                     <div className="flex justify-center mb-2">{nutrient.icon}</div>
                     <p className="text-sm text-muted-foreground">{nutrient.name}</p>
-                    <p className="text-2xl font-bold">{nutrient.value}</p>
+                    <p className="text-2xl font-bold">{!isNaN(nutrient.value) ? nutrient.value : 'N/A'}</p>
                     <p className="text-xs text-muted-foreground">{nutrient.unit}</p>
                   </Card>
                 ))}
@@ -81,57 +83,68 @@ export function AnalysisResults({ result, imageUrl }: AnalysisResultsProps) {
         </div>
       </div>
       
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="font-headline text-2xl flex items-center gap-2">
-            <Lightbulb className="text-accent" />
-            Healthy Alternatives
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-           <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <h3 className="font-semibold text-lg flex items-center gap-2 mb-4"><BookOpen className="h-5 w-5 text-primary" />Cooked Options</h3>
-                 <Accordion type="single" collapsible className="w-full">
-                  {alternatives.cookedAlternatives.map((alt, index) => (
-                    <AccordionItem value={`item-${index}`} key={index}>
-                      <AccordionTrigger>
-                        <div className="flex items-center gap-4">
-                           <Image src={alt.imageUrl} alt={alt.name} width={40} height={40} className="rounded-md object-cover" />
-                           <span>{alt.name}</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
-                          {alt.recipe}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </div>
-               <div>
-                <h3 className="font-semibold text-lg flex items-center gap-2 mb-4"><Package className="h-5 w-5 text-primary" />Packaged Options</h3>
-                <div className="space-y-4">
-                  {alternatives.packagedAlternatives.map((alt, index) => (
-                     <Card key={index} className="bg-background/50">
-                      <CardContent className="p-4 flex items-center gap-4">
-                         <Image src={alt.imageUrl} alt={alt.name} width={60} height={60} className="rounded-md object-cover" />
-                        <div className='flex-1 flex justify-between items-center'>
-                          <p className="font-medium">{alt.name}</p>
-                          <div className="flex items-center gap-1 font-semibold text-primary">
-                            <IndianRupee className="h-4 w-4" />
-                            <span>{alt.price}</span>
+      {hasAlternatives ? (
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="font-headline text-2xl flex items-center gap-2">
+              <Lightbulb className="text-accent" />
+              Healthy Alternatives
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+             <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="font-semibold text-lg flex items-center gap-2 mb-4"><BookOpen className="h-5 w-5 text-primary" />Cooked Options</h3>
+                   <Accordion type="single" collapsible className="w-full">
+                    {alternatives.cookedAlternatives.map((alt, index) => (
+                      <AccordionItem value={`item-${index}`} key={index}>
+                        <AccordionTrigger>
+                          <div className="flex items-center gap-4">
+                             <Image src={alt.imageUrl} alt={alt.name} width={40} height={40} className="rounded-md object-cover" />
+                             <span>{alt.name}</span>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+                            {alt.recipe}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
                 </div>
-              </div>
-           </div>
-        </CardContent>
-      </Card>
+                 <div>
+                  <h3 className="font-semibold text-lg flex items-center gap-2 mb-4"><Package className="h-5 w-5 text-primary" />Packaged Options</h3>
+                  <div className="space-y-4">
+                    {alternatives.packagedAlternatives.map((alt, index) => (
+                       <Card key={index} className="bg-background/50">
+                        <CardContent className="p-4 flex items-center gap-4">
+                           <Image src={alt.imageUrl} alt={alt.name} width={60} height={60} className="rounded-md object-cover" />
+                          <div className='flex-1 flex justify-between items-center'>
+                            <p className="font-medium">{alt.name}</p>
+                            <div className="flex items-center gap-1 font-semibold text-primary">
+                              <IndianRupee className="h-4 w-4" />
+                              <span>{alt.price}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+             </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="shadow-lg">
+           <CardHeader>
+            <CardTitle className="font-headline text-2xl text-center">Great Choice!</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-center">This food is already quite healthy, so no alternatives are suggested.</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -2,21 +2,25 @@
 
 import { analyzeFoodImage } from '@/ai/flows/analyze-food-image';
 import { provideHealthRating } from '@/ai/flows/provide-health-rating';
-import { suggestHealthyAlternatives } from '@/ai/flows/suggest-healthy-alternatives';
+import { suggestHealthyAlternatives, type SuggestHealthyAlternativesOutput } from '@/ai/flows/suggest-healthy-alternatives';
 import type { FullAnalysisResult, ParsedNutrition } from '@/lib/types';
 
 function parseNutrition(content: string): ParsedNutrition {
   // More robust parsing function to handle "Key: Value" formats and conversational text.
   const extractValue = (key: string, text: string): number => {
-    // Regex to find "Key: number" or "Key number" or "number g Key"
+    // Regex to find "Key: number", "Key: number-number", "Key: number to number", or "number g Key"
     const regex = new RegExp(
-      `(?:${key}\\s*:?\\s*(\\d*\\.?\\d+))|(?:(\\d*\\.?\\d+)\\s*g(?:\\s+of)?\\s+${key})`,
+      `(?:${key}\\s*:?\\s*(\\d*\\.?\\d+)(?:\\s*(?:to|-)\\s*(\\d*\\.?\\d+))?)|(?:(\\d*\\.?\\d+)\\s*g(?:\\s+of)?\\s+${key})`,
       'i'
     );
     const match = text.match(regex);
     if (match) {
-      // Return the first captured group that is a number
-      return parseFloat(match[1] || match[2]);
+      const firstVal = parseFloat(match[1] || match[3]);
+      const secondVal = match[2] ? parseFloat(match[2]) : null;
+      if (secondVal) {
+        return (firstVal + secondVal) / 2; // Average the range
+      }
+      return firstVal;
     }
     return 0;
   };
@@ -24,7 +28,7 @@ function parseNutrition(content: string): ParsedNutrition {
   const calories = extractValue('calories', content) || extractValue('kcal', content);
   const protein = extractValue('protein', content);
   const carbohydrates = extractValue('carbohydrates', content);
-  const sugar = extractValue('sugar', content);
+  const sugar = extractValue('sugar', content) || extractValue('sugars', content);
   const fat = extractValue('fat', content);
 
   const nutrition: ParsedNutrition = {
@@ -36,7 +40,7 @@ function parseNutrition(content: string): ParsedNutrition {
   };
 
   // Only throw an error if we couldn't parse ANYTHING.
-  if (Object.values(nutrition).every(val => val === 0)) {
+  if (Object.values(nutrition).every(val => val === 0 || isNaN(val))) {
     throw new Error("Could not parse nutritional information from the analysis. The format might be unexpected. The response was: " + content);
   }
 
@@ -63,13 +67,21 @@ export async function performAnalysis(
     ...parsedNutrition,
   });
 
-  const alternatives = await suggestHealthyAlternatives({
-    identifiedFood: analysis.dishIdentification,
-  });
-
-  if (!rating || !alternatives) {
-    throw new Error('Failed to get health rating or alternatives.');
+  if (!rating) {
+    throw new Error('Failed to get health rating.');
   }
+  
+  let alternatives: SuggestHealthyAlternativesOutput = { cookedAlternatives: [], packagedAlternatives: [] };
+  if (rating.healthScore < 8) {
+      const fetchedAlternatives = await suggestHealthyAlternatives({
+          identifiedFood: analysis.dishIdentification,
+      });
+      if (!fetchedAlternatives) {
+        throw new Error('Failed to get alternatives.');
+      }
+      alternatives = fetchedAlternatives;
+  }
+
 
   return { analysis, parsedNutrition, rating, alternatives };
 }
