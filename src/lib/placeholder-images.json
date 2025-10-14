@@ -3,8 +3,8 @@
     {
       "id": "hero-background",
       "description": "A vibrant and healthy salad in a bowl.",
-      "imageUrl": "https://picsum.photos/seed/healthymeal/1200/800",
-      "imageHint": "healthy food"
+      "imageUrl": "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=2070&auto=format&fit=crop",
+      "imageHint": "healthy food salad"
     }
   ]
 }
