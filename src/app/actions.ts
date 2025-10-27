@@ -60,7 +60,7 @@ export async function performAnalysis(
     throw new Error('Failed to analyze the food image.');
   }
 
-  const parsedNutrition = parseNutrition(analysis.estimatedNutritionalContent);
+  let parsedNutrition = parseNutrition(analysis.estimatedNutritionalContent);
 
   const rating = await provideHealthRating({
     foodName: analysis.dishIdentification,
@@ -69,6 +69,11 @@ export async function performAnalysis(
 
   if (!rating) {
     throw new Error('Failed to get health rating.');
+  }
+
+  // If the AI recalculated calories, update our nutrition object.
+  if (rating.recalculatedCalories && rating.recalculatedCalories > 0) {
+    parsedNutrition.calories = Math.round(rating.recalculatedCalories);
   }
   
   let alternatives: SuggestHealthyAlternativesOutput = { cookedAlternatives: [], packagedAlternatives: [] };
