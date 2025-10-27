@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -40,6 +41,8 @@ const prompt = ai.definePrompt({
   prompt: `You are a nutritionist providing a health rating for food.
 
   Based on the following nutritional information, provide a health score between 1 and 10 (inclusive), where 1 is very unhealthy and 10 is very healthy. Also, provide a brief explanation for your rating.
+
+  IMPORTANT: If the provided calorie count is 0 or seems incorrect given the macronutrient values (protein, carbs, fat), please point out the contradiction in your explanation. Then, calculate the health score based on the macronutrients (carbohydrates, sugar, fat, protein) rather than the stated calories. Use standard estimations: 4 kcal/g for protein and carbs, 9 kcal/g for fat.
 
   Food: {{{foodName}}}
   Calories: {{{calories}}} kcal
