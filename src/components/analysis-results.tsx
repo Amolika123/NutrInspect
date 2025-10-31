@@ -43,7 +43,7 @@ export function AnalysisResults({ result, imageUrl }: AnalysisResultsProps) {
                 src={imageUrl}
                 alt={analysis.dishIdentification}
                 fill
-                className="object-cover blur-sm"
+                className="object-cover blur-lg"
               />
             </div>
           </Card>
